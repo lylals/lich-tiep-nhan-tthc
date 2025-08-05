@@ -87,10 +87,10 @@
                 </button>
             </div>
             <div id="loadingIndicator" class="text-center text-yellow-700 text-sm md:text-base hidden">
-                Đang tải...
+                AI đang phân tích yêu cầu...
             </div>
             <div id="llmResponse"
-                class="mt-3 md:mt-4 p-3 bg-yellow-100 rounded-lg border border-yellow-300 text-gray-800 text-base md:text-lg min-h-[70px] flex items-center justify-center text-center">
+                class="mt-3 md:mt-4 p-3 bg-yellow-100 rounded-lg border border-yellow-300 text-gray-800 text-base md:text-lg min-h-[70px] text-left">
                 Kết quả tra cứu sẽ hiển thị ở đây.
             </div>
         </div>
@@ -128,7 +128,7 @@
 
                 // Hiển thị trạng thái đang tải
                 loadingIndicator.classList.remove('hidden');
-                llmResponseDiv.textContent = '';
+                llmResponseDiv.textContent = ''; // Xóa nội dung cũ
 
                 try {
                     // Tạo prompt từ ngữ cảnh và câu hỏi của người dùng
@@ -136,9 +136,10 @@
                     const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                     const payload = { contents: chatHistory };
                     const apiKey = ""; // API key sẽ được tự động cung cấp bởi môi trường
+                    
+                    // Sử dụng endpoint generateContent để đảm bảo ổn định
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-                    // Lặp lại với thời gian trễ tăng dần để xử lý lỗi mạng tạm thời
                     let response;
                     let retries = 0;
                     const maxRetries = 5;
@@ -149,18 +150,18 @@
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(payload)
                             });
-                            if (response.ok) break; // Thoát vòng lặp nếu thành công
+                            if (response.ok) break;
                         } catch (error) {
                             console.error(`Lỗi khi fetch (thử lại lần ${retries + 1}):`, error);
                         }
                         retries++;
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000)); // Tăng thời gian chờ
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
                     }
 
                     if (!response || !response.ok) {
-                        throw new Error("Không thể kết nối đến API sau nhiều lần thử.");
+                        throw new Error(`Không thể kết nối đến API sau ${maxRetries} lần thử. Mã lỗi: ${response ? response.status : 'không xác định'}.`);
                     }
-
+                    
                     const result = await response.json();
                     
                     // Lấy nội dung trả lời từ API
@@ -173,7 +174,7 @@
                     }
                 } catch (err) {
                     console.error('Đã xảy ra lỗi:', err);
-                    llmResponseDiv.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
+                    llmResponseDiv.textContent = `Đã xảy ra lỗi. Vui lòng thử lại sau. Chi tiết lỗi: ${err.message}`;
                 } finally {
                     loadingIndicator.classList.add('hidden');
                 }

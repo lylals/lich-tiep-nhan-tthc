@@ -135,12 +135,12 @@
                     const prompt = `${infographicContext}\n\nCâu hỏi của người dùng: ${userQuery}`;
                     const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; // API key sẽ được tự động cung cấp bởi môi trường
+                    const apiKey = "AIzaSyBHjV-lUiz_RznMo1mPlOrkedgmTOyEga4"; // Khóa API đã được cập nhật
                     
                     // Sử dụng endpoint generateContent để đảm bảo ổn định
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-                    // Thực hiện fetch một lần duy nhất, loại bỏ vòng lặp retry để tránh lỗi lặp lại.
+                    // Thực hiện fetch
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

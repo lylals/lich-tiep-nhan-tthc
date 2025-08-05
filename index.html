@@ -140,26 +140,18 @@
                     // Sử dụng endpoint generateContent để đảm bảo ổn định
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-                    let response;
-                    let retries = 0;
-                    const maxRetries = 5;
-                    while (retries < maxRetries) {
-                        try {
-                            response = await fetch(apiUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-                            if (response.ok) break;
-                        } catch (error) {
-                            console.error(`Lỗi khi fetch (thử lại lần ${retries + 1}):`, error);
-                        }
-                        retries++;
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
-                    }
+                    // Thực hiện fetch một lần duy nhất, loại bỏ vòng lặp retry để tránh lỗi lặp lại.
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-                    if (!response || !response.ok) {
-                        throw new Error(`Không thể kết nối đến API sau ${maxRetries} lần thử. Mã lỗi: ${response ? response.status : 'không xác định'}.`);
+                    // Kiểm tra phản hồi trực tiếp
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        const errorMessage = errorData.error?.message || `Lỗi không xác định với mã ${response.status}.`;
+                        throw new Error(`Không thể kết nối đến API. Mã lỗi: ${response.status}. Chi tiết: ${errorMessage}`);
                     }
                     
                     const result = await response.json();
@@ -174,7 +166,7 @@
                     }
                 } catch (err) {
                     console.error('Đã xảy ra lỗi:', err);
-                    llmResponseDiv.textContent = `Đã xảy ra lỗi. Vui lòng thử lại sau. Chi tiết lỗi: ${err.message}`;
+                    llmResponseDiv.textContent = `Đã xảy ra lỗi. Vui lòng thử lại sau. Chi tiết lỗi: ${err.message}.`;
                 } finally {
                     loadingIndicator.classList.add('hidden');
                 }
